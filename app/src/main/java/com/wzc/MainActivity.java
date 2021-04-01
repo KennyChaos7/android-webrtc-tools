@@ -1,4 +1,4 @@
-package com.wzc.ns;
+package com.wzc;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -17,7 +17,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.wzc.agc.AgcUtils;
+import com.wzc.ns.NsUtils;
+import com.wzc.ns.R;
+import com.wzc.tools.WebrtcUtils;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -175,10 +177,10 @@ public class MainActivity extends AppCompatActivity {
             int sample = 8000;
             int bufferSize = 160 * (sample / 8000);
 
-            NsUtils nsUtils = new NsUtils();
-            nsUtils.useNs().setNsConfig(sample, 2).prepareNs();
-            AgcUtils agcUtils = new AgcUtils();
-            agcUtils.setAgcConfig(0, 20, 1).prepare();
+            WebrtcUtils webrtcUtils = new WebrtcUtils();
+            webrtcUtils.useNs().setNsConfig(sample, 2).prepareNs();
+//            AgcUtils agcUtils = new AgcUtils();
+            webrtcUtils.setAgcConfig(0, 20, 1).prepare();
 
             Toast.makeText(this, "开始测试", Toast.LENGTH_LONG).show();
 
@@ -192,8 +194,8 @@ public class MainActivity extends AppCompatActivity {
                 short[] outData = new short[buffer.length/2];
                 short[] outMixData = new short[buffer.length/2];
                 ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(inputData);
-                int ret = nsUtils.nsProcess(inputData, null, outData, null);
-                agcUtils.agcProcess(outData, 0, buffer.length/2, outMixData, 0, micOutLevel, 0, 0);
+                int ret = webrtcUtils.nsProcess(inputData, null, outData, null);
+                webrtcUtils.agcProcess(outData, 0, buffer.length/2, outMixData, 0, micOutLevel, 0, 0);
 
                 fOut.write(shortArrayToByteArray(outMixData));
             }
