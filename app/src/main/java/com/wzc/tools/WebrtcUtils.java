@@ -6,6 +6,8 @@ import android.util.Log;
 public class WebrtcUtils {
 
     private final String TAG = this.getClass().getSimpleName();
+    private final static int AGC_MIN_VOL = 0;
+    private final static int AGC_MAX_VOL = 255;
 
     static {
         System.loadLibrary("wzc_webrtc_tools");
@@ -14,16 +16,183 @@ public class WebrtcUtils {
     //agc实例
     private int agcInstance = -1;
     //agc配置
-    private WebRtcAgcConfig config = null;
-    //是否已初始化
-    private boolean mIsInit = false;
+    private WebRtcAgcConfig webRtcAgcConfig = null;
+    // agc增益模式
+    private int agcMode = 0;
+    //是否agc已初始化
+    private boolean isAgcInit = false;
 
+
+    //ns实例
+    private int nsInstance = -1;
+    //是否ns已初始化
+    private boolean isNsInit = false;
+    //nsx实例
+    private int nsxInstance = -1;
+    //是否nsx已初始化
+    private boolean isNsxInit = false;
+    //ns采样率
+    private int bitSample;
+    //ns降噪模式
+    private int nsMode;
+
+    private void setAgcConfig(WebrtcUtils.WebRtcAgcConfig webRtcAgcConfig, int agcMode) {
+        this.webRtcAgcConfig = webRtcAgcConfig;
+        this.agcMode = agcMode;
+    }
+
+    private WebrtcUtils prepareAgc(){
+        if (isAgcInit) {
+            close();
+        }
+        agcInstance = createAgc();
+        int initStatus = initAgc(agcInstance,AGC_MIN_VOL,AGC_MAX_VOL,this.agcMode,this.bitSample);
+
+        Log.e(TAG,"initStatus =  " + initStatus);
+
+        isAgcInit = true;
+        int setStatus = setAgcConfig(agcInstance,webRtcAgcConfig);
+        Log.e(TAG,"setStatus =  " + setStatus);
+        return this;
+    }
+
+    private void close() {
+        if (isAgcInit) {
+            freeAgc(agcInstance);
+            agcInstance = -1;
+            isAgcInit = false;
+        }
+    }
+
+    public int processAgc (short[] inNear,int num_bands,int samples,short[] out,int inMicLevel,int outMicLevel,int echo,int saturationWarning){
+        return processAgc(agcInstance,inNear,num_bands,samples,out,inMicLevel,outMicLevel,echo,saturationWarning);
+    }
+
+
+    //-----------------------------------------NS 定点数运算----------------------------------------------//
+
+    private void setNsConfig(int bitSample,int mode){
+        this.bitSample = bitSample;
+        this.nsMode = mode;
+    }
+
+    private void prepareNs(){
+        if (isNsInit){
+            closeNs();
+        }
+        nsInstance = createNs();
+        int initStatus = initNs(nsInstance, bitSample);
+        Log.e(TAG,"nsInitStatus = " + initStatus);
+        isNsInit = true;
+        int setStatus = setNsPolicy(nsInstance, nsMode);
+        Log.e(TAG,"nsSetStatus = " + setStatus);
+    }
+
+    public int processNs(short[] sample,short[] sample_H,short[] outData, short[] outData_H){
+        return processNs(nsInstance, sample, sample_H, outData, outData_H);
+    }
+
+    private void closeNs(){
+        if (isNsInit){
+            freeNs(nsInstance);
+            nsInstance = -1;
+            isNsInit = false;
+        }
+    }
+
+    //-------------------------------------------NSX 浮点数运算------------------------------------------//
+
+    private void setNsxConfig(int bitSample,int mode){
+        this.bitSample = bitSample;
+        this.nsMode = mode;
+    }
+
+    private WebrtcUtils prepareNsx(){
+        if (isNsxInit){
+            closeNsx();
+            nsxInstance = createNsx();
+        }
+        int initStatus = initNsx(nsxInstance, bitSample);
+        Log.e(TAG,"nsxInitStatus = " + initStatus);
+        isNsxInit = true;
+        int setStatus = setNsxPolicy(nsxInstance, nsMode);
+        Log.e(TAG,"nsxSetStatus = " + setStatus);
+        return this;
+    }
+
+    private void closeNsx(){
+        if (isNsxInit){
+            freeNsx(nsxInstance);
+            nsxInstance = -1;
+            isNsxInit = false;
+        }
+    }
+
+    public static class WebRtcAgcConfig {
+        private int targetLevelDbfs;
+        private int compressionGaindB;
+        private int limiterEnable;
+
+        public WebRtcAgcConfig(int targetLevelDbfs, int compressionGaindB, int limiterEnable) {
+            this.targetLevelDbfs = targetLevelDbfs;
+            this.compressionGaindB = compressionGaindB;
+            this.limiterEnable = limiterEnable;
+        }
+    }
+
+    public static class WebRtcFactory{
+        private int bitSamples = 0;
+        private int nsMode = 0;
+        private int agcMode = 0;
+        private WebRtcAgcConfig webRtcAgcConfig = null;
+        
+        private WebRtcFactory factory = null;
+
+        public WebRtcFactory() {
+
+        }
+
+        public WebRtcFactory initNs(int bitSamples, int nsMode) {
+            this.bitSamples = bitSamples;
+            this.nsMode = nsMode;
+            return this;
+        }
+
+        public WebRtcFactory setBitSamples(int bitSamples) {
+            this.bitSamples = bitSamples;
+            return this;
+        }
+
+        public WebRtcFactory setNsMode(int nsMode) {
+            this.nsMode = nsMode;
+            return this;
+        }
+
+        public WebRtcFactory initAgc(WebrtcUtils.WebRtcAgcConfig webRtcAgcConfig, int agcMode) {
+            this.webRtcAgcConfig = webRtcAgcConfig;
+            this.agcMode = agcMode;
+            return this;
+        }
+
+        public WebrtcUtils build() {
+            WebrtcUtils webrtcUtils = new WebrtcUtils();
+            webrtcUtils.setNsConfig(this.bitSamples, this.nsMode);
+            webrtcUtils.prepareNs();
+            webrtcUtils.setAgcConfig(this.webRtcAgcConfig, this.agcMode);
+            webrtcUtils.prepareAgc();
+            return webrtcUtils;
+        }
+    }
+
+
+
+    /*-------------------------------Native--------------------------*/
     /**
      * 创建agc实例
      * @return :AGC instance if successful
      *         : 0 (i.e., a NULL pointer) if unsuccessful
      */
-    public native int create();
+    private native int createAgc();
 
     /**
      * 初始化agc
@@ -37,12 +206,12 @@ public class WebrtcUtils {
      *                : 3 - Fixed Digital Gain 0dB
      * @param fs 采样率
      */
-    public native int init(int agcInstance,int minLevel,int maxLevel,int agcMode,int fs);
+    private native int initAgc(int agcInstance,int minLevel,int maxLevel,int agcMode,int fs);
 
     /**
      * 销毁agc实例
      */
-    public native int free(int agcInstance);
+    private native int freeAgc(int agcInstance);
 
     /**
      * 核心处理
@@ -72,7 +241,7 @@ public class WebrtcUtils {
      *                          :  0 - Normal operation.
      *                          : -1 - Error
      */
-    public native int process(int agcInstance,short[] inNear,int num_bands,int samples,short[] out,int inMicLevel,int outMicLevel,int echo,int saturationWarning);
+    private native int processAgc(int agcInstance,short[] inNear,int num_bands,int samples,short[] out,int inMicLevel,int outMicLevel,int echo,int saturationWarning);
 
     /***
      *
@@ -89,89 +258,25 @@ public class WebrtcUtils {
      *                            :  0 - Normal operation.
      *                            : -1 - Error
      */
-    public native int setConfig(int agcInstance, WebRtcAgcConfig agcConfig);
-
-
-    public native int addFarend(int agcInstance,short[] inFar,int samples);
-    public native int addMic(int agcInstance,short[] inMic,int num_bands,int samples);
-    public native int getConfig();
-    public native int virtualMic();
-    public native int getAddFarendError();
-
-
-    public WebrtcUtils() {
-        config = new WebRtcAgcConfig();
-        agcInstance = create();
-        Log.e(TAG,"agcInstance = " + agcInstance);
-    }
-
-    private class WebRtcAgcConfig {
-        private int targetLevelDbfs;
-        private int compressionGaindB;
-        private int limiterEnable;
-    }
-
-    public WebrtcUtils setAgcConfig (int targetLevelDbfs, int compressionGaindB, int limiterEnable ){
-        config.targetLevelDbfs = targetLevelDbfs;
-        config.compressionGaindB = compressionGaindB;
-        config.limiterEnable = limiterEnable;
-
-        return this;
-    }
-
-    public WebrtcUtils prepare(){
-        if (mIsInit) {
-            close();
-            agcInstance = create();
-        }
-
-        int initStatus = init(agcInstance,0,255,3,8000);
-
-        Log.e(TAG,"initStatus =  " + initStatus);
-
-        mIsInit = true;
-        int setStatus = setConfig(agcInstance,config);
-        Log.e(TAG,"setStatus =  " + setStatus);
-        return this;
-    }
-
-    public void close() {
-        if (mIsInit) {
-            free(agcInstance);
-            agcInstance = -1;
-            mIsInit = false;
-        }
-    }
-
-    public int agcProcess (short[] inNear,int num_bands,int samples,short[] out,int inMicLevel,int outMicLevel,int echo,int saturationWarning){
-        return process(agcInstance,inNear,num_bands,samples,out,inMicLevel,outMicLevel,echo,saturationWarning);
-    }
-
-
-    private int mFrequency;
-    private int mMode;
-
-    //-----------------------------------------NS 定点数运算----------------------------------------------//
-    private int nsInstance = -1;
-    private boolean isNsInit = false;
+    private native int setAgcConfig(int agcInstance, WebRtcAgcConfig agcConfig);
 
     /**
      * 创建ns实例
      * @return 成功时返回ns实例，失败返回-1
      */
-    public native int nsCreate ();
+    private native int createNs();
 
     /**
      * 初始化ns
      * @param frequency 采样率
      */
-    public native int nsInit(int nsInstance,int frequency);
+    private native int initNs(int nsInstance,int frequency);
 
     /**
      * 设置降噪策略 等级越高，效果越明显
      * @param mode 0: Mild, 1: Medium , 2: Aggressive
      */
-    public native int nsSetPolicy(int nsInstance,int mode);
+    private native int setNsPolicy(int nsInstance,int mode);
 
     /**
      * 核心处理方法
@@ -181,101 +286,20 @@ public class WebrtcUtils {
      * @param outData 低频段音频数据-输出
      * @param outData_H 高频段音频数据-输出(demo中传的是null)
      */
-    public native int nsProcess(int nsInstance,short[] sample,short[] sample_H,short[] outData, short[] outData_H);
+    private native int processNs(int nsInstance,short[] sample,short[] sample_H,short[] outData, short[] outData_H);
 
     /**
      * 销毁实例
      */
-    public native int nsFree(int nsInstance);
+    private native int freeNs(int nsInstance);
 
-    public WebrtcUtils useNs(){
-        nsInstance = nsCreate();
-        Log.d(TAG,"nsInstance = " + nsInstance);
-        return this;
-    }
+    private native int createNsx();
 
-    public WebrtcUtils setNsConfig(int frequency,int mode){
-        this.mFrequency = frequency;
-        this.mMode = mode;
-        return this;
-    }
+    private native int initNsx(int nsxInstance,int frequency);
 
-    public WebrtcUtils prepareNs(){
-        if (isNsInit){
-            closeNs();
-            nsInstance = nsCreate();
-        }
-        int initStatus = nsInit(nsInstance,mFrequency);
-        Log.e(TAG,"nsInitStatus = " + initStatus);
-        isNsInit = true;
-        int setStatus = nsSetPolicy(nsInstance,mMode);
-        Log.e(TAG,"nsSetStatus = " + setStatus);
-        return this;
-    }
+    private native int setNsxPolicy(int nsxInstance,int mode);
 
-    public int nsProcess(short[] sample,short[] sample_H,short[] outData, short[] outData_H){
-        return nsProcess(nsInstance, sample, sample_H, outData, outData_H);
-    }
+    private native int processNsx(int nsxInstance,short[] sample,short[] sample_H,short[] outData, short[] outData_H);
 
-    public void closeNs(){
-        if (isNsInit){
-            nsFree(nsInstance);
-            nsInstance = -1;
-            isNsInit = false;
-        }
-    }
-
-    //-------------------------------------------NSX 浮点数运算------------------------------------------//
-
-    private int nsxInstance = -1;
-    private boolean isNsxInit = false;
-
-    public native int nsxCreate ();
-
-    public native int nsxInit(int nsxInstance,int frequency);
-
-    public native int nsxSetPolicy(int nsxInstance,int mode);
-
-    public native int nsxProcess(int nsxInstance,short[] sample,short[] sample_H,short[] outData, short[] outData_H);
-
-    public native int nsxFree(int nsxInstance);
-
-    public WebrtcUtils useNsx(){
-        nsxInstance = nsxCreate();
-        Log.d(TAG,"nsxInstance = " + nsxInstance);
-        return this;
-    }
-
-    public WebrtcUtils setNsxConfig(int frequency,int mode){
-        this.mFrequency = frequency;
-        this.mMode = mode;
-        return this;
-    }
-
-    public WebrtcUtils prepareNsx(){
-        if (isNsxInit){
-            closeNsx();
-            nsxInstance = nsxCreate();
-        }
-        int initStatus = nsxInit(nsxInstance,mFrequency);
-        Log.e(TAG,"nsxInitStatus = " + initStatus);
-        isNsxInit = true;
-        int setStatus = nsxSetPolicy(nsxInstance,mMode);
-        Log.e(TAG,"nsxSetStatus = " + setStatus);
-        return this;
-    }
-
-    public int nsxProcess(short[] sample,short[] sample_H,short[] outData, short[] outData_H){
-        return nsxProcess(nsxInstance, sample, sample_H, outData, outData_H);
-    }
-
-
-    public void closeNsx(){
-        if (isNsxInit){
-            nsxFree(nsxInstance);
-            nsxInstance = -1;
-            isNsxInit = false;
-        }
-    }
-
+    private native int freeNsx(int nsxInstance);
 }

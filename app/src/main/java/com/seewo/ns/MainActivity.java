@@ -15,7 +15,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.wzc.ns.R;
+
+import com.wzc.R;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

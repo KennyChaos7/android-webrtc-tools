@@ -15,11 +15,10 @@ extern "C" {
 #endif
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    create
+ * Method:    createAgc
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_create
-        (JNIEnv *env, jclass jclazz){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_createAgc(JNIEnv *env, jclass jclazz){
     void *agcInstance = NULL;
     WebRtcAgc_Create(&agcInstance);
     return ((int) agcInstance);
@@ -28,12 +27,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_create
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    init
+ * Method:    initAgc
  * Signature: (IIIII)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_init
-        (JNIEnv *env, jclass jclazz, jint agcInstance, jint minLevel, jint maxLevel, jint agcMode, jint fs){
-
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_initAgc(JNIEnv *env, jclass jclazz, jint agcInstance, jint minLevel, jint maxLevel, jint agcMode, jint fs){
     void *agcInst = (void *) agcInstance;
     if (agcInst == NULL)
         return -5;
@@ -43,11 +40,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_init
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    free
+ * Method:    freeAgc
  * Signature: (I)V
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_free
-(JNIEnv *env, jclass jclazz, jint agcInstance){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_freeAgc(JNIEnv *env, jclass jclazz, jint agcInstance){
     void *agcInst = (void *) agcInstance;
     if (agcInst == NULL)
         return -2;
@@ -57,10 +53,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_free
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    process
+ * Method:    processAgc
  * Signature: (I[SII[SIIII)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_process
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_processAgc
         (JNIEnv *env, jclass jclazz, jint agcInstance, const jshortArray inNear, jint num_bands, jint samples, jshortArray out, jint inMicLevel, jint outMicLevel, jint echo, jint saturationWarning){
 
         int16_t *arrNear = NULL;
@@ -92,11 +88,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_process
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    setConfig
- * Signature: (ILcom/wzc/agc/AgcUtils/WebRtcAgcConfig;)I
+ * Method:    setAgcConfig
+ * Signature: (ILcom/wzc/tools/WebrtcUtils/WebRtcAgcConfig;)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_setConfig
-        (JNIEnv *env, jclass jclazz, jint agcInstance, jobject agcConfig){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_setAgcConfig(JNIEnv *env, jclass jclazz, jint agcInstance, jobject agcConfig){
 
         void * agcInst = (void *) agcInstance;
         if (agcInst == NULL)
@@ -130,52 +125,46 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_setConfig
  * Method:    addFarend
  * Signature: (I[SI)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_addFarend
-        (JNIEnv *env, jclass jclazz, jint agcInstance, jshortArray inFar, jint samples){
-    return 0;
-}
+// JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_addFarend(JNIEnv *env, jclass jclazz, jint agcInstance, jshortArray inFar, jint samples){
+//     return 0;
+// }
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
  * Method:    addMic
  * Signature: (I[SII)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_addMic
-        (JNIEnv *env, jclass jclazz, jint agcInstance, jshortArray inMic, jint num_bands, jint samples){
-    return 0;
-}
+// JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_addMic(JNIEnv *env, jclass jclazz, jint agcInstance, jshortArray inMic, jint num_bands, jint samples){
+//     return 0;
+// }
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
  * Method:    getConfig
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_getConfig
-        (JNIEnv *, jclass);
+// JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_getConfig(JNIEnv *, jclass);
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
  * Method:    virtualMic
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_virtualMic
-        (JNIEnv *, jclass);
+// JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_virtualMic(JNIEnv *, jclass);
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
  * Method:    getAddFarendError
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_getAddFarendError
-        (JNIEnv *, jclass);
+// JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_getAddFarendError(JNIEnv *, jclass);
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    create
+ * Method:    createNs
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsCreate
-        (JNIEnv *env, jobject obj){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_createNs(JNIEnv *env, jobject obj){
     NsHandle* handle = NULL;
     WebRtcNs_Create(&handle);
 
@@ -184,11 +173,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsCreate
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    init
+ * Method:    initNs
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsInit
-        (JNIEnv *env, jobject obj, jint nsHandler, jint frequency){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_initNs(JNIEnv *env, jobject obj, jint nsHandler, jint frequency){
     NsHandle *handler = (NsHandle *) nsHandler;
     if (handler == NULL){
         return -3;
@@ -198,11 +186,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsInit
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    setPolicy
+ * Method:    setNsPolicy
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsSetPolicy
-        (JNIEnv *env, jobject obj, jint nsHandler, jint mode){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_setNsPolicy(JNIEnv *env, jobject obj, jint nsHandler, jint mode){
 
     NsHandle *handle = (NsHandle *) nsHandler;
 
@@ -215,11 +202,11 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsSetPolicy
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    process
+ * Method:    processNs
  * Signature: (I[SI[S)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsProcess
-        (JNIEnv *env, jobject obj, jint nsHandler, jshortArray sample, jshortArray sample_H, jshortArray out,jshortArray out_H){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_processNs
+        (JNIEnv *env, jobject obj, jint nsHandler, jshortArray before, jshortArray before_H, jshortArray out,jshortArray out_H){
     NsHandle *handle = (NsHandle *) nsHandler;
     if(handle == NULL){
         return -3;
@@ -230,10 +217,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsProcess
     short* outframe_H = NULL;
 
     int ret = -1;
-    spframe = (*env)->GetShortArrayElements(env,sample, NULL);
+    spframe = (*env)->GetShortArrayElements(env,before, NULL);
     outframe = (*env)->GetShortArrayElements(env,out, NULL);
-    if(sample_H != NULL){
-        spframe_H = (*env)->GetShortArrayElements(env,sample_H, NULL);
+    if(before_H != NULL){
+        spframe_H = (*env)->GetShortArrayElements(env,before_H, NULL);
     }
     if(out_H != NULL){
         outframe_H = (*env)->GetShortArrayElements(env,out_H, NULL);
@@ -241,11 +228,11 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsProcess
 
     ret = WebRtcNs_Process(handle,spframe,spframe_H,outframe,outframe_H);
 
-    (*env)->ReleaseShortArrayElements(env,sample, spframe, 0);
+    (*env)->ReleaseShortArrayElements(env,before, spframe, 0);
     (*env)->ReleaseShortArrayElements(env,out, outframe, 0);
 
-    if(sample_H != NULL){
-        (*env)->ReleaseShortArrayElements(env,sample_H, spframe_H, 0);
+    if(before_H != NULL){
+        (*env)->ReleaseShortArrayElements(env,before_H, spframe_H, 0);
     }
     if(out_H != NULL){
         (*env)->ReleaseShortArrayElements(env,out_H, outframe_H, 0);
@@ -257,11 +244,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsProcess
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    free
+ * Method:    freeNs
  * Signature: (I)V
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsFree
-         (JNIEnv *env, jobject obj, jint nsHandler){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_freeNs(JNIEnv *env, jobject obj, jint nsHandler){
     NsHandle *handle = (NsHandle *) nsHandler;
     if(handle == NULL){
         return -3;
@@ -280,11 +266,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsFree
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    nsxCreate
+ * Method:    createNsx
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxCreate
-        (JNIEnv *env, jobject obj){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_createNsx(JNIEnv *env, jobject obj){
 
     NsHandle* handle = NULL;
     WebRtcNsx_Create(&handle);
@@ -295,11 +280,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxCreate
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    nsxInit
+ * Method:    initNsx
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxInit
-        (JNIEnv *env, jobject obj, jint nsxHandler, jint frequency ){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_initNsx(JNIEnv *env, jobject obj, jint nsxHandler, jint frequency ){
     NsHandle *handler = (NsHandle *) nsxHandler;
     if (handler == NULL){
         return -3;
@@ -310,11 +294,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxInit
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    nsxSetPolicy
+ * Method:    setNsxPolicy
  * Signature: (II)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxSetPolicy
-        (JNIEnv *env, jobject obj, jint nsxHandler, jint mode){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_setNsxPolicy(JNIEnv *env, jobject obj, jint nsxHandler, jint mode){
     NsHandle *handle = (NsHandle *) nsxHandler;
 
     if (handle == NULL){
@@ -325,10 +308,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxSetPolicy
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    nsxProcess
+ * Method:    processNsx
  * Signature: (I[SI[S)I
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxProcess
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_processNsx
         (JNIEnv *env, jobject obj, jint nsxHandler, jshortArray sample, jshortArray sample_H, jshortArray out,jshortArray out_H){
     NsHandle *handle = (NsHandle *) nsxHandler;
     if(handle == NULL){
@@ -366,11 +349,10 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxProcess
 
 /*
  * Class:     com_wzc_tools_WebrtcUtils
- * Method:    nsxFree
+ * Method:    freeNsx
  * Signature: (I)V
  */
-JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_nsxFree
-        (JNIEnv *env, jobject obj, jint nsxHandler){
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_freeNsx(JNIEnv *env, jobject obj, jint nsxHandler){
     NsHandle *handle = (NsHandle *) nsxHandler;
     if(handle == NULL){
         return -3;

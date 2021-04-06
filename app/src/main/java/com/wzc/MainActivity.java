@@ -17,8 +17,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.wzc.ns.NsUtils;
-import com.wzc.ns.R;
 import com.wzc.tools.WebrtcUtils;
 
 import java.io.FileInputStream;
@@ -38,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String OUT_FILE_PATH2 = Environment.getExternalStorageDirectory().getAbsolutePath() + "/origin_out.pcm";
     private static final String OUT_FILE_PATH3 = Environment.getExternalStorageDirectory().getAbsolutePath() + "/record_origin.pcm";
     private static final String OUT_FILE_PATH4 = Environment.getExternalStorageDirectory().getAbsolutePath() + "/record_mix.pcm";
-
+    private final static int recordCount = 500;
 
     private final int minAudioFormatSize = AudioRecord.getMinBufferSize(8000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
     private AudioRecord audioRecord;
@@ -143,11 +141,11 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             FileOutputStream os = new FileOutputStream(OUT_FILE_PATH3);
                             byte[] buffer = new byte[minAudioFormatSize];
-                            while (audioRecord.read(buffer, 0, minAudioFormatSize) != -1 && count < 200) {
+                            while (audioRecord.read(buffer, 0, minAudioFormatSize) != -1 && count < recordCount) {
                                 count++;
                                 os.write(buffer);
                             }
-                            if (count == 200) {
+                            if (count == recordCount) {
                                 os.close();
                                 audioRecord.stop();
                                 audioRecord.release();
@@ -177,11 +175,11 @@ public class MainActivity extends AppCompatActivity {
             int sample = 8000;
             int bufferSize = 160 * (sample / 8000);
 
-            WebrtcUtils webrtcUtils = new WebrtcUtils();
-            webrtcUtils.useNs().setNsConfig(sample, 2).prepareNs();
-//            AgcUtils agcUtils = new AgcUtils();
-            webrtcUtils.setAgcConfig(0, 20, 1).prepare();
-
+            WebrtcUtils.WebRtcAgcConfig webRtcAgcConfig = new WebrtcUtils.WebRtcAgcConfig(0, 20, 1);
+            WebrtcUtils webrtcUtils = new WebrtcUtils.WebRtcFactory()
+                    .initNs(sample, 2)
+                    .initAgc(webRtcAgcConfig,3)
+                    .build();
             Toast.makeText(this, "开始测试", Toast.LENGTH_LONG).show();
 
             InputStream fInt = new FileInputStream(OUT_FILE_PATH3);//getResources().openRawResource(R.raw.test_input);
@@ -194,9 +192,8 @@ public class MainActivity extends AppCompatActivity {
                 short[] outData = new short[buffer.length/2];
                 short[] outMixData = new short[buffer.length/2];
                 ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(inputData);
-                int ret = webrtcUtils.nsProcess(inputData, null, outData, null);
-                webrtcUtils.agcProcess(outData, 0, buffer.length/2, outMixData, 0, micOutLevel, 0, 0);
-
+                int ret = webrtcUtils.processNs(inputData, null, outData, null);
+                webrtcUtils.processAgc(outData, 0, buffer.length/2, outMixData, 0, micOutLevel, 0, 0);
                 fOut.write(shortArrayToByteArray(outMixData));
             }
 
@@ -217,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
 //            fOut.close();
 
 
-            Toast.makeText(this, "测试结束，输出文件位于手机根目录下/ns_out.pcm", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "测试结束", Toast.LENGTH_LONG).show();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -226,35 +223,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doNsx() {
-        try {
-            NsUtils nsUtils = new NsUtils();
-            nsUtils.useNsx().setNsxConfig(8000, 2).prepareNsx();
-            Toast.makeText(this, "开始测试", Toast.LENGTH_LONG).show();
-
-            InputStream fInt = getResources().openRawResource(R.raw.test_input);
-            FileOutputStream fOut = new FileOutputStream(OUT_FILE_PATH);
-            byte[] buffer = new byte[160];
-            int bytes;
-
-            while (fInt.read(buffer) != -1) {
-                short[] inputData = new short[80];
-                short[] outData = new short[80];
-                ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(inputData);
-                int ret = nsUtils.nsxProcess(inputData, null, outData, null);
-
-                Log.e(TAG, "ret = " + ret);
-
-                fOut.write(shortArrayToByteArray(outData));
-            }
-
-            fInt.close();
-            fOut.close();
-
-            Toast.makeText(this, "测试结束，输出文件位于手机根目录下/ns_out.pcm", Toast.LENGTH_LONG).show();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            NsUtils nsUtils = new NsUtils();
+//            nsUtils.useNsx().setNsxConfig(8000, 2).prepareNsx();
+//            Toast.makeText(this, "开始测试", Toast.LENGTH_LONG).show();
+//
+//            InputStream fInt = getResources().openRawResource(R.raw.test_input);
+//            FileOutputStream fOut = new FileOutputStream(OUT_FILE_PATH);
+//            byte[] buffer = new byte[160];
+//            int bytes;
+//
+//            while (fInt.read(buffer) != -1) {
+//                short[] inputData = new short[80];
+//                short[] outData = new short[80];
+//                ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(inputData);
+//                int ret = nsUtils.nsxProcess(inputData, null, outData, null);
+//
+//                Log.e(TAG, "ret = " + ret);
+//
+//                fOut.write(shortArrayToByteArray(outData));
+//            }
+//
+//            fInt.close();
+//            fOut.close();
+//
+//            Toast.makeText(this, "测试结束，输出文件位于手机根目录下/ns_out.pcm", Toast.LENGTH_LONG).show();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
 
