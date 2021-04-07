@@ -6,6 +6,7 @@
 #include "gain_control.h"
 #include "noise_suppression_x.h"
 #include "noise_suppression.h"
+#include "echo_control_mobile.h"
 #include "Platform.h"
 #ifndef _Included_com_wzc_tools_WebrtcUtils
 #define _Included_com_wzc_tools_WebrtcUtils
@@ -360,6 +361,106 @@ JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_freeNsx(JNIEnv *env, jobje
 
     return WebRtcNsx_Free(handle);
 }
+
+
+
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_createAecm(JNIEnv *env) {
+     return WebRtcAecm_Create();
+}
+
+
+
+
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_initAecm(JNIEnv *env, jint aecmInstance, jint sampleFrequency) {
+    void* instance = (void*)aecmInstance;
+    int32_t samFreq = (int32_t)sampleFrequency;
+    return WebRtcAecm_Init(instance, samFreq);
+}
+
+
+
+
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_freeAecm(JNIEnv *env, jint aecmInstance) {
+     void* instance = (void*)aecmInstance;
+     WebRtcAecm_Free(instance);
+}
+
+
+
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_bufferFarendAecm(JNIEnv *env, jint aecmInstance, jshortArray farend, jint farendSize) {
+    void* instance = (void*)aecmInstance;
+    short* fraendData = NULL;
+    int sizeFraendData = (int)farendSize;
+    int ret = -1;
+    fraendData = (*env)->GetShortArrayElements(env,farend, NULL);
+    
+    ret = WebRtcAecm_BufferFarend(instance, fraendData, sizeFraendData);
+
+    (*env)->ReleaseShortArrayElements(env,farend, fraendData, 0);
+
+    return ret;
+}
+
+
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_processAecm
+    (JNIEnv *env, jint aecmInstance, jshortArray noisyData, jshortArray cleanData, jshortArray outData, jint dataSize, jshort msInSndCardBuf) {
+    void* instance = (void*)aecmInstance;
+    short*  _noisyData= NULL;
+    short*  _cleanData= NULL;
+    short*  _outData= NULL;
+    int _sizeData = (int)dataSize;  
+    short _msInSndCardBuf = (int16_t)msInSndCardBuf;
+    int ret = -1;
+   
+    if (noisyData != NULL)
+    {
+        _noisyData = (*env)->GetShortArrayElements(env,noisyData, NULL);
+    }
+    if (cleanData != NULL)
+    {
+        _cleanData = (*env)->GetShortArrayElements(env,cleanData, NULL);
+    }
+    _outData = (*env)->GetShortArrayElements(env,outData, NULL);
+
+
+    ret = WebRtcAecm_Process(instance, _noisyData, _cleanData, _outData, _sizeData, _msInSndCardBuf);
+    
+    if (noisyData != NULL)
+    {
+         (*env)->ReleaseShortArrayElements(env,noisyData, _noisyData, 0);
+    }
+    if (_cleanData != NULL) 
+    {
+         (*env)->ReleaseShortArrayElements(env,cleanData, _cleanData, 0);
+    }
+    (*env)->ReleaseShortArrayElements(env,outData, _outData, 0);
+
+    return ret;
+    
+}
+
+
+JNIEXPORT jint JNICALL Java_com_wzc_tools_WebrtcUtils_setAecmConfig
+    (JNIEnv *env, jint aecmInstance, jclass aecmConfig)
+{
+    void* instance = (void*)aecmInstance;
+    jclass JavaWebRtcAecmConfig = (*env)->GetObjectClass(env,aecmConfig);
+    jfieldID fCngMode = (*env)->GetFieldID(env, JavaWebRtcAecmConfig, "cngMode", "I");
+    jfieldID fEchoMode = (*env)->GetFieldID(env, JavaWebRtcAecmConfig, "echoMode", "I");
+
+    int cngMode = (*env)->GetIntField(env,aecmConfig, fCngMode);
+    int echoMode = (*env)->GetIntField(env,aecmConfig, fEchoMode);
+
+    AecmConfig _config;
+    _config.cngMode = cngMode;
+    _config.echoMode = echoMode;
+    
+    int ret = -1;
+    ret = WebRtcAecm_set_config(instance, _config);
+    
+    return ret;
+}    
+
 
 #ifdef __cplusplus
 }

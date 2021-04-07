@@ -36,6 +36,15 @@ public class WebrtcUtils {
     //ns降噪模式
     private int nsMode;
 
+
+    //-----------------------------------------Aecm 消除回声----------------------------------------------//
+
+
+
+
+    //-----------------------------------------Agc 增益----------------------------------------------//
+
+
     private void setAgcConfig(WebrtcUtils.WebRtcAgcConfig webRtcAgcConfig, int agcMode) {
         this.webRtcAgcConfig = webRtcAgcConfig;
         this.agcMode = agcMode;
@@ -125,6 +134,16 @@ public class WebrtcUtils {
             freeNsx(nsxInstance);
             nsxInstance = -1;
             isNsxInit = false;
+        }
+    }
+
+    public static class WebRtcAecmConfig {
+        private int cngMode;
+        private int echoMode;
+
+        public WebRtcAecmConfig(int cngMode, int echoMode) {
+            this.cngMode = cngMode;
+            this.echoMode = echoMode;
         }
     }
 
